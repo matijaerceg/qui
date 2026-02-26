@@ -44,6 +44,7 @@ interface CategoryTreeProps {
   getCategoryState: (category: string) => "include" | "exclude" | "neutral"
   getCheckboxState: (state: "include" | "exclude" | "neutral") => boolean | "indeterminate"
   onCategoryCheckboxChange: (category: string) => void
+  onCategoryLabelClick?: (category: string) => void
   onCategoryPointerDown?: (event: ReactPointerEvent<HTMLElement>, category: string) => void
   onCategoryPointerLeave?: (event: ReactPointerEvent<HTMLElement>) => void
   onCreateSubcategory: (parent: string) => void
@@ -119,6 +120,7 @@ const CategoryTreeNode = memo(({
   getCategoryState,
   getCheckboxState,
   onCategoryCheckboxChange,
+  onCategoryLabelClick,
   onCategoryPointerDown,
   onCategoryPointerLeave,
   onCreateSubcategory,
@@ -139,6 +141,7 @@ const CategoryTreeNode = memo(({
   getCategoryState: (category: string) => "include" | "exclude" | "neutral"
   getCheckboxState: (state: "include" | "exclude" | "neutral") => boolean | "indeterminate"
   onCategoryCheckboxChange: (category: string) => void
+  onCategoryLabelClick?: (category: string) => void
   onCategoryPointerDown?: (event: ReactPointerEvent<HTMLElement>, category: string) => void
   onCategoryPointerLeave?: (event: ReactPointerEvent<HTMLElement>) => void
   onCreateSubcategory: (parent: string) => void
@@ -178,6 +181,15 @@ const CategoryTreeNode = memo(({
   const handleCheckboxChange = useCallback(() => {
     onCategoryCheckboxChange(node.name)
   }, [node.name, onCategoryCheckboxChange])
+
+  const handleLabelClick = useCallback((e: ReactMouseEvent) => {
+    e.stopPropagation()
+    if (onCategoryLabelClick) {
+      onCategoryLabelClick(node.name)
+    } else {
+      onCategoryCheckboxChange(node.name)
+    }
+  }, [node.name, onCategoryCheckboxChange, onCategoryLabelClick])
 
   const handlePointerDown = useCallback((event: ReactPointerEvent<HTMLElement>) => {
     onCategoryPointerDown?.(event, node.name)
@@ -246,7 +258,7 @@ const CategoryTreeNode = memo(({
 
             <span
               className={`flex-1 min-w-0 truncate text-sm cursor-pointer ${categoryState === "exclude" ? "text-destructive" : ""}`}
-              onClick={handleCheckboxChange}
+              onClick={handleLabelClick}
             >
               {node.displayName}
             </span>
@@ -307,6 +319,7 @@ const CategoryTreeNode = memo(({
               getCategoryState={getCategoryState}
               getCheckboxState={getCheckboxState}
               onCategoryCheckboxChange={onCategoryCheckboxChange}
+              onCategoryLabelClick={onCategoryLabelClick}
               onCategoryPointerDown={onCategoryPointerDown}
               onCategoryPointerLeave={onCategoryPointerLeave}
               onCreateSubcategory={onCreateSubcategory}
@@ -339,6 +352,7 @@ export const CategoryTree = memo(({
   getCategoryState,
   getCheckboxState,
   onCategoryCheckboxChange,
+  onCategoryLabelClick,
   onCategoryPointerDown,
   onCategoryPointerLeave,
   onCreateSubcategory,
@@ -387,21 +401,34 @@ export const CategoryTree = memo(({
   const uncategorizedCount = getCategoryCount("")
   const uncategorizedSize = getCategorySize?.("")
 
+  const handleUncategorizedLabelClick = useCallback((e: ReactMouseEvent) => {
+    e.stopPropagation()
+    if (onCategoryLabelClick) {
+      onCategoryLabelClick("")
+    } else {
+      onCategoryCheckboxChange("")
+    }
+  }, [onCategoryCheckboxChange, onCategoryLabelClick])
+
   return (
     <div className="flex flex-col gap-0">
       {/* All/Uncategorized special items */}
 
       <li
         className={cn("grid items-center hover:bg-muted rounded-md cursor-pointer w-full min-w-0", uncategorizedColumns, itemGap, itemPadding)}
-        onClick={() => onCategoryCheckboxChange("")}
         onPointerDown={(event) => onCategoryPointerDown?.(event, "")}
         onPointerLeave={onCategoryPointerLeave}
+        role="presentation"
       >
         <Checkbox
           checked={uncategorizedCheckboxState}
+          onCheckedChange={() => onCategoryCheckboxChange("")}
           className="size-4"
         />
-        <span className={cn("flex-1 min-w-0 truncate text-sm italic", uncategorizedState === "exclude" ? "text-destructive" : "text-muted-foreground")}>
+        <span
+          className={cn("flex-1 min-w-0 truncate text-sm italic cursor-pointer", uncategorizedState === "exclude" ? "text-destructive" : "text-muted-foreground")}
+          onClick={handleUncategorizedLabelClick}
+        >
           Uncategorized
         </span>
         <Tooltip>
@@ -428,6 +455,7 @@ export const CategoryTree = memo(({
           getCategoryState={getCategoryState}
           getCheckboxState={getCheckboxState}
           onCategoryCheckboxChange={onCategoryCheckboxChange}
+          onCategoryLabelClick={onCategoryLabelClick}
           onCategoryPointerDown={onCategoryPointerDown}
           onCategoryPointerLeave={onCategoryPointerLeave}
           onCreateSubcategory={onCreateSubcategory}

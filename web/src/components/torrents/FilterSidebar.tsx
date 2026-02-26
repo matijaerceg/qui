@@ -1571,6 +1571,92 @@ const FilterSidebarComponent = ({
     }
   }, [cancelLongPress, handleTrackerGroupExcludeToggle, isMobile, makeToggleKey, scheduleLongPressExclude])
 
+  const handleStatusLabelClick = useCallback((status: string) => {
+    const key = makeToggleKey("status", status)
+    if (skipNextToggleRef.current === key) {
+      skipNextToggleRef.current = null
+      return
+    }
+    skipNextToggleRef.current = null
+    const isAlreadyIsolated = selectedFilters.status.length === 1 &&
+      selectedFilters.status[0] === status &&
+      selectedFilters.excludeStatus.length === 0
+    if (isAlreadyIsolated) {
+      applyFilterChange({ ...selectedFilters, status: [], excludeStatus: [] })
+    } else {
+      applyFilterChange({ ...selectedFilters, status: [status], excludeStatus: [] })
+    }
+  }, [applyFilterChange, makeToggleKey, selectedFilters])
+
+  const handleCategoryLabelClick = useCallback((category: string) => {
+    const key = makeToggleKey("category", category)
+    if (skipNextToggleRef.current === key) {
+      skipNextToggleRef.current = null
+      return
+    }
+    skipNextToggleRef.current = null
+    const isAlreadyIsolated = selectedFilters.categories.length === 1 &&
+      selectedFilters.categories[0] === category &&
+      selectedFilters.excludeCategories.length === 0
+    if (isAlreadyIsolated) {
+      applyFilterChange({ ...selectedFilters, categories: [], excludeCategories: [] })
+    } else {
+      applyFilterChange({ ...selectedFilters, categories: [category], excludeCategories: [] })
+    }
+  }, [applyFilterChange, makeToggleKey, selectedFilters])
+
+  const handleTagLabelClick = useCallback((tag: string) => {
+    const key = makeToggleKey("tag", tag)
+    if (skipNextToggleRef.current === key) {
+      skipNextToggleRef.current = null
+      return
+    }
+    skipNextToggleRef.current = null
+    const isAlreadyIsolated = selectedFilters.tags.length === 1 &&
+      selectedFilters.tags[0] === tag &&
+      selectedFilters.excludeTags.length === 0
+    if (isAlreadyIsolated) {
+      applyFilterChange({ ...selectedFilters, tags: [], excludeTags: [] })
+    } else {
+      applyFilterChange({ ...selectedFilters, tags: [tag], excludeTags: [] })
+    }
+  }, [applyFilterChange, makeToggleKey, selectedFilters])
+
+  const handleTrackerLabelClick = useCallback((tracker: string) => {
+    const key = makeToggleKey("tracker", tracker)
+    if (skipNextToggleRef.current === key) {
+      skipNextToggleRef.current = null
+      return
+    }
+    skipNextToggleRef.current = null
+    const isAlreadyIsolated = selectedFilters.trackers.length === 1 &&
+      selectedFilters.trackers[0] === tracker &&
+      selectedFilters.excludeTrackers.length === 0
+    if (isAlreadyIsolated) {
+      applyFilterChange({ ...selectedFilters, trackers: [], excludeTrackers: [] })
+    } else {
+      applyFilterChange({ ...selectedFilters, trackers: [tracker], excludeTrackers: [] })
+    }
+  }, [applyFilterChange, makeToggleKey, selectedFilters])
+
+  const handleTrackerGroupLabelClick = useCallback((domains: string[], key: string) => {
+    const toggleKey = makeToggleKey("tracker", key)
+    if (skipNextToggleRef.current === toggleKey) {
+      skipNextToggleRef.current = null
+      return
+    }
+    skipNextToggleRef.current = null
+    const currentIncluded = new Set(selectedFilters.trackers)
+    const isAlreadyIsolated = selectedFilters.trackers.length === domains.length &&
+      domains.every(d => currentIncluded.has(d)) &&
+      selectedFilters.excludeTrackers.length === 0
+    if (isAlreadyIsolated) {
+      applyFilterChange({ ...selectedFilters, trackers: [], excludeTrackers: [] })
+    } else {
+      applyFilterChange({ ...selectedFilters, trackers: [...domains], excludeTrackers: [] })
+    }
+  }, [applyFilterChange, makeToggleKey, selectedFilters])
+
   const untaggedState = getTagState("")
   const uncategorizedState = getCategoryState("")
   const noTrackerState = getTrackerState("")
@@ -1860,7 +1946,7 @@ const FilterSidebarComponent = ({
                   </button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom" align="start" className="max-w-[220px]">
-                  Left click cycles include and neutral. Cmd/Ctrl + click or a long press toggles exclusion.
+                  Checkbox click toggles include/neutral. Label click isolates that item. Cmd/Ctrl + click or long press toggles exclusion.
                 </TooltipContent>
               </Tooltip>
               {(isLoading || isStaleData) && (
@@ -1996,6 +2082,7 @@ const FilterSidebarComponent = ({
                             statusState === "exclude" ? "text-destructive" : undefined,
                             isCrossSeed && statusState === "neutral" ? "text-muted-foreground" : undefined
                           )}
+                          onClick={!(isCrossSeed && statusState === "neutral") ? (e) => { e.stopPropagation(); handleStatusLabelClick(state.value) } : undefined}
                         >
                           <state.icon className="h-4 w-4 shrink-0" />
                           <span className="truncate">{state.label}</span>
@@ -2119,6 +2206,7 @@ const FilterSidebarComponent = ({
                           "text-sm flex-1 min-w-0 italic truncate",
                           uncategorizedState === "exclude" ? "text-destructive" : "text-muted-foreground"
                         )}
+                        onClick={(e) => { e.stopPropagation(); handleCategoryLabelClick("") }}
                       >
                         Uncategorized
                       </span>
@@ -2183,6 +2271,7 @@ const FilterSidebarComponent = ({
                       getCategoryState={getCategoryState}
                       getCheckboxState={getCheckboxVisualState}
                       onCategoryCheckboxChange={handleCategoryCheckboxChange}
+                      onCategoryLabelClick={handleCategoryLabelClick}
                       onCategoryPointerDown={handleCategoryPointerDown}
                       onCategoryPointerLeave={handlePointerLeave}
                       onCreateSubcategory={handleCreateSubcategory}
@@ -2249,6 +2338,7 @@ const FilterSidebarComponent = ({
                                         "text-sm flex-1 min-w-0",
                                         categoryState === "exclude" ? "text-destructive" : undefined
                                       )}
+                                      onClick={(e) => { e.stopPropagation(); handleCategoryLabelClick(name) }}
                                     >
                                       {displayName}
                                     </TruncatedText>
@@ -2361,6 +2451,7 @@ const FilterSidebarComponent = ({
                                   "text-sm flex-1 min-w-0",
                                   categoryState === "exclude" ? "text-destructive" : undefined
                                 )}
+                                onClick={(e) => { e.stopPropagation(); handleCategoryLabelClick(name) }}
                               >
                                 {displayName}
                               </TruncatedText>
@@ -2529,6 +2620,7 @@ const FilterSidebarComponent = ({
                           "text-sm flex-1 min-w-0 italic truncate",
                           untaggedState === "exclude" ? "text-destructive" : "text-muted-foreground"
                         )}
+                        onClick={(e) => { e.stopPropagation(); handleTagLabelClick("") }}
                       >
                         Untagged
                       </span>
@@ -2626,6 +2718,7 @@ const FilterSidebarComponent = ({
                                         "text-sm flex-1 min-w-0",
                                         tagState === "exclude" ? "text-destructive" : undefined
                                       )}
+                                      onClick={(e) => { e.stopPropagation(); handleTagLabelClick(tag) }}
                                     >
                                       {tag}
                                     </TruncatedText>
@@ -2709,6 +2802,7 @@ const FilterSidebarComponent = ({
                                   "text-sm flex-1 min-w-0",
                                   tagState === "exclude" ? "text-destructive" : undefined
                                 )}
+                                onClick={(e) => { e.stopPropagation(); handleTagLabelClick(tag) }}
                               >
                                 {tag}
                               </TruncatedText>
@@ -2816,6 +2910,7 @@ const FilterSidebarComponent = ({
                         "text-sm flex-1 min-w-0 italic truncate",
                         noTrackerState === "exclude" ? "text-destructive" : "text-muted-foreground"
                       )}
+                      onClick={(e) => { e.stopPropagation(); handleTrackerLabelClick("") }}
                     >
                       No tracker
                     </span>
@@ -2891,6 +2986,7 @@ const FilterSidebarComponent = ({
                                         trackerState === "exclude" ? "text-destructive" : undefined
                                       )}
                                       tooltipContent={trackerGroup.isCustomized ? `${trackerGroup.displayName} (${trackerGroup.domains.join(", ")})` : undefined}
+                                      onClick={(e) => { e.stopPropagation(); handleTrackerGroupLabelClick(trackerGroup.domains, trackerGroup.key) }}
                                     >
                                       {trackerGroup.displayName}
                                     </TruncatedText>
@@ -2979,6 +3075,7 @@ const FilterSidebarComponent = ({
                                   trackerState === "exclude" ? "text-destructive" : undefined
                                 )}
                                 tooltipContent={trackerGroup.isCustomized ? `${trackerGroup.displayName} (${trackerGroup.domains.join(", ")})` : undefined}
+                                onClick={(e) => { e.stopPropagation(); handleTrackerGroupLabelClick(trackerGroup.domains, trackerGroup.key) }}
                               >
                                 {trackerGroup.displayName}
                               </TruncatedText>
